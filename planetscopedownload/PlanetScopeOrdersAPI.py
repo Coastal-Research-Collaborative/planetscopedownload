@@ -2,7 +2,7 @@
 This module creates a framework to download satalite data from the PlanetScope orders API.
 Notice we use the Planet Data API to get the idem names of the images that we want
 
-Author: Joel Nicolow, Climate Resiliance Initiative, School of Ocean and Earth Science and Technology, University of Hawaii at Manoa
+Author: Joel Nicolow, Coastal Research Collaborative, School of Ocean and Earth Science and Technology, University of Hawaii at Manoa
 """
 
 # load modules
