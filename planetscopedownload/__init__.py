@@ -1,7 +1,7 @@
 """
-init script for geedownload imports everything from geeutils and tiffutils
+init script for planet scope api order class
 
-Joel Nicolow, Coastal Research Collaborative, March 2025
+Joel Nicolow, Coastal Research Collaborative, April 2025
 """
 
 # this way makes it so all the functins from both scripts are just imported dirrectly from geedownload
