@@ -188,38 +188,29 @@ class PlanetScopeAPIOrder(object):
         # lets user decide what regions/sites they would like to run
         if self.SELECT_SITES:
             print("here is a list of the sites available:")
-            for sitename, site_dict in self.REGION_DICTS.items():
+            for sitename, site_dict in self.SITE_DICTS.items():
                 print(sitename)
-                print(regionDict.keys())
+                print(site_dict.keys())
             print("Enter the region (if multiple enter in comma dilimeted list) you would like to look at (or 'all' for every region)")
-            regions = input("region(s): ")
-            if regions == 'all':
-                regions = self.REGION_DICTS.keys()
+            sites = input("site(s): ")
+            if sites == 'all':
+                sites = self.SITE_DICTS.keys()
             else:
-                regions = regions.split(',')
+                sites = sites.split(',')
 
-            self.REGION_DICTS = only_keep_these_dict_elements(self.REGION_DICTS, regions)
-            for region in self.REGION_DICTS.keys():
-                print(region)
-                print(self.REGION_DICTS[region].keys())
-                sites = input(f'site(s) for {region}: ')
-                if sites == 'all':
-                    sites = self.REGION_DICTS[region].keys()
-                else:
-                    sites = sites.split(',')
-                self.REGION_DICTS[region] = only_keep_these_dict_elements(self.REGION_DICTS[region], sites)
-            print(self.REGION_DICTS) # this is the slimmed down version of the region dicts
-        print(self.REGION_DICTS)
+            self.SITE_DICTS = only_keep_these_dict_elements(self.SITE_DICTS, sites)
+
+        print(self.SITE_DICTS)
 
 
         if self.THREAD:
             self.get_all_data_concurrent()
         else:
-            for region, regionDict in self.REGION_DICTS.items():
+            for dict, site_dict in self.SITE_DICTS.items():
                 # the first variable is a throwaway variable because we dont need it but it is the regionName
                 # each region represents a collection sites (beaches) for example O'ahu would be a region with beaches on O'ahu
-                for siteName, siteDict in regionDict.items():
-                    self.get_one_site_data(siteName, siteDict, region)
+                for sitename, site_dict in site_dict.items():
+                    self.get_one_site_data(sitename, site_dict)
 
 
     def get_all_data_concurrent(self):
