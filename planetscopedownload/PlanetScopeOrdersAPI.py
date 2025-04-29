@@ -156,31 +156,14 @@ class PlanetScopeAPIOrder(object):
             if dictionaries == None:
                 # load from json
                 single_site_dicts = glob(os.path.join(self.ROOT_DIR, 'sites', '*_site_dict.json'))
-                if len(single_site_dicts) >= 1:
-                    # self.SITE_DICTS = []
-                    self.REGION_DICTS  = {}
-                    for site_dict_fn in single_site_dicts:
-                        f = open(site_dict_fn)
-                        # self.REGION_DICTS.append(json.load(f))
-                        data = json.load(f)
-                        # self.SITE_DICTS.append(data)
-                        self.REGION_DICTS  = {**self.REGION_DICTS , str(os.path.basename(site_dict_fn)).replace('_site_dict.json', '') : data}
-                else:
-                    site_files = os.listdir(os.path.join(self.ROOT_DIR, 'sites'))
-                    site_dict_file_string = "_site_dictionaries_PS_API"
-                    self.REGION_DICTS  = {}
-                    regions = False # check if there is any availble data
-                    for fn in site_files:
-                        if site_dict_file_string in fn:
-                            regions = True
-                            regionName = fn.split(site_dict_file_string)[0]
-                            f = open(os.path.join(self.ROOT_DIR, 'sites', fn))
-                            self.REGION_DICTS  = {**self.REGION_DICTS , regionName: json.load(f)} # merge dictionaries ** unpacks the items in the dict so we can merge them on the same level
-                            f.close()
-                    if not regions:
-                        raise ValueError(f'There were no region site dictionaries found. Files should have the path "sites/<region name>{site_dict_file_string}. See "planetscope_api/readme.txt".')
-            else:
-                self.REGION_DICTS = dictionaries # list of dictionaries that contain all needed information for a specific site
+                self.SITE_DICTS = []
+                for site_dict_fn in single_site_dicts:
+                    f = open(site_dict_fn)
+                    data = json.load(f)
+                    self.SITE_DICTS.append(data)
+
+            else:   
+                self.SITE_DICTS = dictionaries # list of dictionaries that contain all needed information for a specific site
 
         f = open(os.path.join(self.ROOT_DIR, 'sites', 'PlanetScope_API_key.txt'))
         self.PLANET_API_KEY = f.read()
