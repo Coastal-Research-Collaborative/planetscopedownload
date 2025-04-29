@@ -59,7 +59,7 @@ def create_dir(path):
     return(True)
 
 
-def create_site_dict_json_for_API(site_name:str, region:str, aoi:list, start_date:str, end_date:str, data_dir:str=os.path.join(os.getcwd(), 'data')):
+def create_site_dict_json_for_API(sitename:str, aoi:list, start_date:str, end_date:str, data_dir:str=os.path.join(os.getcwd(), 'data')):
     """
     This function creates sites/<sitename>_site_dict.json for the given site
     """
@@ -70,34 +70,32 @@ def create_site_dict_json_for_API(site_name:str, region:str, aoi:list, start_dat
     if aoi[0] != aoi[-1]: aoi.append(aoi[0].copy())  # PlanetScope API wants last coordinate to be copy of first coordinate
 
     site_entry = {
-        site_name: {
-            "item_type": "PSScene",
-            "geometry_filter": {
-                "type": "GeometryFilter",
-                "field_name": "geometry",
-                "config": {
-                    "type": "Polygon",
-                    "coordinates": [aoi]
-                }
-            },
-            "date_range_filter": {
-                "type": "DateRangeFilter",
-                "field_name": "acquired",
-                "config": {
-                    "gte": f"{start_date}T00:00:00.000Z",
-                    "lte": f"{end_date}T00:00:00.000Z"
-                }
-            },
-            "cloud_cover_filter": {
-                "type": "RangeFilter",
-                "field_name": "cloud_cover",
-                "config": {"lte": 0.3}
+        "item_type": "PSScene",
+        "geometry_filter": {
+            "type": "GeometryFilter",
+            "field_name": "geometry",
+            "config": {
+                "type": "Polygon",
+                "coordinates": [aoi]
             }
+        },
+        "date_range_filter": {
+            "type": "DateRangeFilter",
+            "field_name": "acquired",
+            "config": {
+                "gte": f"{start_date}T00:00:00.000Z",
+                "lte": f"{end_date}T00:00:00.000Z"
+            }
+        },
+        "cloud_cover_filter": {
+            "type": "RangeFilter",
+            "field_name": "cloud_cover",
+            "config": {"lte": 0.3}
         }
     }
     
 
-    file_path = os.path.join(sites_dir, f'{region}_site_dict.json')
+    file_path = os.path.join(sites_dir, f'{sitename}_site_dict.json')
 
     # load existing data if file exists; otherwise, start with an empty dictionary
     if os.path.exists(file_path):
@@ -110,7 +108,7 @@ def create_site_dict_json_for_API(site_name:str, region:str, aoi:list, start_dat
     existing_data.update(site_entry)
     
 
-    with open(os.path.join(sites_dir, f'{region}_site_dict.json'), "w") as f: 
+    with open(os.path.join(sites_dir, f'{sitename}_site_dict.json'), "w") as f: 
         json.dump(existing_data, f, indent=4) # indent=4 makes the JSON pretty-printed
 
     return existing_data
