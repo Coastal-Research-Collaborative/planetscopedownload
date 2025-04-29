@@ -58,6 +58,7 @@ def create_dir(path):
         rootPath = os.path.join(rootPath, endingList[i])
     return(True)
 
+
 def create_site_dict_json_for_API(site_name:str, region:str, aoi:list, start_date:str, end_date:str):
     """
     This function creates sites/<sitename>_site_dict.json for the given site
