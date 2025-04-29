@@ -185,13 +185,13 @@ class PlanetScopeAPIOrder(object):
         :param self:
         """
 
-        # lets user decide what regions/sites they would like to run
+        # lets user decide what sites they would like to run
         if self.SELECT_SITES:
             print("here is a list of the sites available:")
             for sitename, site_dict in self.SITE_DICTS.items():
                 print(sitename)
                 print(site_dict.keys())
-            print("Enter the region (if multiple enter in comma dilimeted list) you would like to look at (or 'all' for every region)")
+            print("Enter the site (if multiple enter in comma dilimeted list) you would like to look at (or 'all' for every site)")
             sites = input("site(s): ")
             if sites == 'all':
                 sites = self.SITE_DICTS.keys()
@@ -207,8 +207,7 @@ class PlanetScopeAPIOrder(object):
             self.get_all_data_concurrent()
         else:
             for dict, site_dict in self.SITE_DICTS.items():
-                # the first variable is a throwaway variable because we dont need it but it is the regionName
-                # each region represents a collection sites (beaches) for example O'ahu would be a region with beaches on O'ahu
+                # the first variable is a throwaway variable because we dont need it but it is the sitename
                 for sitename, site_dict in site_dict.items():
                     self.get_one_site_data(sitename, site_dict)
 
@@ -231,7 +230,7 @@ class PlanetScopeAPIOrder(object):
             with concurrent.futures.ThreadPoolExecutor(max_workers=len(site_dict)) as executor:
                 
                 firstSite = True
-                for siteName, siteDict in site_dict.items():
+                for sitename, site_dict in site_dict.items():
                     if not firstSite:
                         time.sleep(60) # setting a n second delay between queries so that we do not get a HTTP 429 (too many queries response)
                     else:
@@ -244,9 +243,8 @@ class PlanetScopeAPIOrder(object):
         This function downloads data for one site from the Planet orders API
 
         :param self:
-        :param siteName: name of beach
-        :param siteDict: the dictionary for one specific site
-        :param region: String region name that the site is a part of
+        :param sitename: name of beach
+        :param site_dict: the dictionary for one specific site
         """
 
         print("site name: " + sitename)
@@ -362,33 +360,33 @@ class PlanetScopeAPIOrder(object):
 
        
 
-    def get_combined_filter(self, siteDict):
+    def get_combined_filter(self, site_dict):
         """
         combines filter generated from one site in self.DICTS (or a dictionary with the same structure)
         
         :param self:
-        :param siteDict: the dictionary for one specific site
+        :param site_dict: the dictionary for one specific site
         :return: combined filter_all 
         """
         combined_filter = {
             "type" : "AndFilter",
-            "config" : [siteDict["geometry_filter"], siteDict["date_range_filter"], siteDict["cloud_cover_filter"]]
+            "config" : [site_dict["geometry_filter"], site_dict["date_range_filter"], site_dict["cloud_cover_filter"]]
         }
 
         return(combined_filter)
 
 
-    def build_products_dict(self, siteName, siteDict, bundle_type = "analytic"):
+    def build_products_dict(self, sitename, site_dict, bundle_type = "analytic"):
         """
         This function lists through all assets avaible from PlanetScope that satisfy the combined filter.
         This also checks to make sure we havent already downloaded the assets
 
         :param self:
-        :param siteName: name of site, this is only used to see if the items have already been downloaded
-        :param siteDict: the dictionary for one specific site
+        :param sitename: name of site, this is only used to see if the items have already been downloaded
+        :param site_dict: the dictionary for one specific site
         :param bundle_type: the type of bundle we want to download (default "analytic")
         """
-        item_type = siteDict["item_type"] 
+        item_type = site_dict["item_type"] 
         if self.PRINT_ALL:
             print("item type: " + item_type)
         # info on item types here: https://developers.planet.com/docs/apis/data/items-assets/
@@ -400,7 +398,7 @@ class PlanetScopeAPIOrder(object):
         # API request object
         search_request = {
         "item_types": [item_type], 
-        "filter": self.get_combined_filter(siteDict)
+        "filter": self.get_combined_filter(site_dict)
         }
 
         # fire off the POST request
@@ -419,7 +417,7 @@ class PlanetScopeAPIOrder(object):
         # extract image IDs only
         image_ids = [feature['id'] for feature in search_result.json()['features']]
         if self.PRINT_ALL:
-            print(siteName)
+            print(sitename)
             # print(image_ids)
             print(f'length before test sats and already downloaded removed: {len(image_ids)}')
 
@@ -439,8 +437,8 @@ class PlanetScopeAPIOrder(object):
 
         # remove images that have previously been downloaded
         alreadyDownloaded = ''
-        if exists(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', siteName)):
-            alreadyDownloaded = os.listdir(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', siteName))
+        if exists(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', sitename)):
+            alreadyDownloaded = os.listdir(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', sitename))
             alreadyDownloaded = ''.join(alreadyDownloaded) # make it one string so we can just search if it exists
         idList = [] # reset idList because the old contents have already been removed
         # get already downloaded assets
@@ -486,17 +484,17 @@ class PlanetScopeAPIOrder(object):
             return(False)
 
 
-    def build_clip_request_dict(self, siteDict, siteName):
+    def build_clip_request_dict(self, site_dict, sitename):
         """
         creates request dictionary for cliping the images
 
         :param self:
-        :param siteDict:  the dictionary for one specific site
+        :param site_dict:  the dictionary for one specific site
         :return: products dictionary (or False if there are no )
         """
         clip_aoi = {
             "type" : "Polygon",
-            "coordinates" : siteDict["geometry_filter"]["config"]["coordinates"]
+            "coordinates" : site_dict["geometry_filter"]["config"]["coordinates"]
         }
 
         clip = {
@@ -512,8 +510,8 @@ class PlanetScopeAPIOrder(object):
             }
         }
         request_clip = {
-            "name": siteName,
-            "products": self.build_products_dict(siteName, siteDict),
+            "name": sitename,
+            "products": self.build_products_dict(sitename, site_dict),
             "tools": [clip, toar]
             }
         # print(request_clip)
@@ -598,14 +596,14 @@ class PlanetScopeAPIOrder(object):
             time.sleep(10)
 
 
-    def download_order(self, request_order_url, siteName, siteDict, region, overwrite=False):
+    def download_order(self, request_order_url, sitename, site_dict, overwrite=False):
         """
         This function downloads all of the downloadable links returned by the API
 
         :param self:
         :param request_order_url: url returned by self.place_order()
-        :param siteName: name of beach
-        :param siteDict: the dictionary for one specific site
+        :param sitename: name of beach
+        :param site_dict: the dictionary for one specific site
         :param region: region that the site is in (used for save path)
         :param overwrite: if it should overwrite and already downloaded item default=False
 
@@ -631,13 +629,13 @@ class PlanetScopeAPIOrder(object):
             results_fileNames.append(fileName)
 
         # innerDir = 'files'
-        # siteDir = (siteName + "_images_" + siteDict['item_type'])
+        # siteDir = (sitename + "_images_" + site_dict['item_type'])
 
-        create_dir(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', region, siteName))
+        create_dir(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', sitename))
 
-        results_paths = [os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', region, siteName, n) for n in results_fileNames]
+        results_paths = [os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', sitename, n) for n in results_fileNames]
 
-        print(f'{len(results_urls)} items to download for {siteName}')
+        print(f'{len(results_urls)} items to download for {sitename}')
         
         for url, name, path in zip(results_urls, results_names, results_paths):
             if overwrite or not exists(path):
