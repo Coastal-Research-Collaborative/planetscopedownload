@@ -224,22 +224,22 @@ class PlanetScopeAPIOrder(object):
         # THE COMMENTED OUT CODE BELOW IS FOR IF YOU WANTED TO TRY RUN THE REGIONS CONCURENTLY (could maybe test not having them both say with __ as executor and use as ex for one)
         # with concurrent.futures.ThreadPoolExecutor() as executor:
         #     [executor.submit(self.get_regional_data_concurrent(regionDict)) for _, regionDict in self.REGION_DICTS.items()] # '_' for the first element of items (the name)
-        for region, regionDict in self.REGION_DICTS.items():
+        for sitename, site_dict in self.SITE_DICTS.items():
             # print(regionDict)
             # the first variable is a throwaway variable because we dont need it but it is the regionName
             # each region represents a collection sites (beaches) for example O'ahu would be a region with beaches on O'ahu
-            with concurrent.futures.ThreadPoolExecutor(max_workers=len(regionDict)) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(site_dict)) as executor:
                 
                 firstSite = True
-                for siteName, siteDict in regionDict.items():
+                for siteName, siteDict in site_dict.items():
                     if not firstSite:
                         time.sleep(60) # setting a n second delay between queries so that we do not get a HTTP 429 (too many queries response)
                     else:
                         firstSite = False
-                    executor.submit(self.get_one_site_data, siteName, siteDict, region)
+                    executor.submit(self.get_one_site_data, sitename, site_dict)
                     
 
-    def get_one_site_data(self, siteName, siteDict, region):
+    def get_one_site_data(self, sitename, site_dict):
         """
         This function downloads data for one site from the Planet orders API
 
@@ -249,13 +249,13 @@ class PlanetScopeAPIOrder(object):
         :param region: String region name that the site is a part of
         """
 
-        print("site name: " + siteName)
+        print("site name: " + sitename)
         # The Planet data API will not return 250 or more items at a time so if there are more than
         # maxDays in the daterange we assume that it will be more than 250 items and we split it up
         maxDays = 200
         dtFormat = '%Y-%m-%dT%H:%M:%S.%fZ' # e.g. '2022-08-22T00:00:00.000Z'
-        gte = dt.datetime.strptime(siteDict['date_range_filter']['config']['gte'], dtFormat)
-        lte = dt.datetime.strptime(siteDict['date_range_filter']['config']['lte'], dtFormat)
+        gte = dt.datetime.strptime(site_dict['date_range_filter']['config']['gte'], dtFormat)
+        lte = dt.datetime.strptime(site_dict['date_range_filter']['config']['lte'], dtFormat)
         timeRangeLength = lte-gte
 
         if timeRangeLength.days > maxDays:
@@ -278,13 +278,13 @@ class PlanetScopeAPIOrder(object):
                 print(startTime)
                 print(endTime)
 
-                siteDict['date_range_filter']['config']['gte'] = startTime
-                siteDict['date_range_filter']['config']['lte'] = endTime
-                products = self.build_clip_request_dict(siteDict, siteName)
+                site_dict['date_range_filter']['config']['gte'] = startTime
+                site_dict['date_range_filter']['config']['lte'] = endTime
+                products = self.build_clip_request_dict(site_dict, sitename)
                 if not products or products['products'] == False:
                     continue
                 # productsShell1 = products.copy()
-                self.get_one_site_data_from_products(siteName, siteDict, region, products)
+                self.get_one_site_data_from_products(sitename, site_dict, products)
                     
 
             # print(len(allItemIds))
@@ -294,17 +294,12 @@ class PlanetScopeAPIOrder(object):
             # products = productsShell1 # no need to copy in this instance
 
         else:
-            products = self.build_clip_request_dict(siteDict, siteName)
+            products = self.build_clip_request_dict(site_dict, sitename)
             # print(products.keys())
         
-            self.get_one_site_data_from_products(siteName, siteDict, region, products)
+            self.get_one_site_data_from_products(sitename, site_dict, products)
 
 
-
-            ##### ABM edit
-    import traceback
-
-    # ... (your existing code)
 
     def get_one_site_data_from_products(self, siteName, siteDict, region, products, max_retries=3):
         """
