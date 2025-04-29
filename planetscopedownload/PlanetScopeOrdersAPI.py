@@ -18,9 +18,46 @@ import requests
 from requests.auth import HTTPBasicAuth
 import time # for giving rest period in while loop when waiting for activation
 import concurrent.futures # this is for threading (specifically while waiting for API response)
-from coastvision import supportingFunctions
 # import urllib # downloading downloadable link
 import traceback
+
+#### Supporting functions
+def only_keep_these_dict_elements(dictionary, keep):
+    """
+    Takes in a dictionary and a list of elements you want to keep. Then removes the elements you do not wish to keep
+
+    :param dictionary: a dictionary
+    :param keep: a list ([]) of the keys for the elements that you wish to keep
+
+    :return: the updated dictionary
+    """
+    removes = []
+    for key in dictionary.keys():
+        if key not in keep:
+            removes.append(key)
+    for remove in removes:
+        dictionary.pop(remove)
+    return(dictionary)
+
+def create_dir(path):
+    split = os.path.split(path)
+
+    endingList = [split[1]]
+    while not split[1] == '':
+        split = os.path.split(split[0])
+        if split[1] == '':
+            endingList.append(split[0])
+        else:
+            endingList.append(split[1])
+
+
+    rootPath = endingList[len(endingList)-1]
+    for i in range(len(endingList)-2, -1, -1):
+        if not os.path.exists(os.path.join(rootPath, endingList[i])):
+            os.mkdir(os.path.join(rootPath, endingList[i]))
+        rootPath = os.path.join(rootPath, endingList[i])
+    return(True)
+
 
 
 class PlanetScopeAPIOrder(object):
@@ -111,7 +148,7 @@ class PlanetScopeAPIOrder(object):
             else:
                 regions = regions.split(',')
 
-            self.REGION_DICTS = supportingFunctions.only_keep_these_dict_elements(self.REGION_DICTS, regions)
+            self.REGION_DICTS = only_keep_these_dict_elements(self.REGION_DICTS, regions)
             for region in self.REGION_DICTS.keys():
                 print(region)
                 print(self.REGION_DICTS[region].keys())
@@ -120,7 +157,7 @@ class PlanetScopeAPIOrder(object):
                     sites = self.REGION_DICTS[region].keys()
                 else:
                     sites = sites.split(',')
-                self.REGION_DICTS[region] = supportingFunctions.only_keep_these_dict_elements(self.REGION_DICTS[region], sites)
+                self.REGION_DICTS[region] = only_keep_these_dict_elements(self.REGION_DICTS[region], sites)
             print(self.REGION_DICTS) # this is the slimmed down version of the region dicts
         print(self.REGION_DICTS)
 
@@ -525,7 +562,6 @@ class PlanetScopeAPIOrder(object):
             time.sleep(10)
 
 
-    from coastvision import supportingFunctions
     def download_order(self, request_order_url, siteName, siteDict, region, overwrite=False):
         """
         This function downloads all of the downloadable links returned by the API
