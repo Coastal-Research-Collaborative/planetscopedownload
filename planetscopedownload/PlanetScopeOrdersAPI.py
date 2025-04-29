@@ -156,11 +156,12 @@ class PlanetScopeAPIOrder(object):
             if dictionaries == None:
                 # load from json
                 single_site_dicts = glob(os.path.join(self.ROOT_DIR, 'sites', '*_site_dict.json'))
-                self.SITE_DICTS = []
+                self.SITE_DICTS = {}
                 for site_dict_fn in single_site_dicts:
                     f = open(site_dict_fn)
                     data = json.load(f)
-                    self.SITE_DICTS.append(data)
+                    sitename = os.path.basename(site_dict_fn).replace('_site_dict.json', '')
+                    self.SITE_DICTS[sitename] = data
 
             else:   
                 self.SITE_DICTS = dictionaries # list of dictionaries that contain all needed information for a specific site
@@ -186,9 +187,9 @@ class PlanetScopeAPIOrder(object):
 
         # lets user decide what regions/sites they would like to run
         if self.SELECT_SITES:
-            print("here is a list of the regions and there sites available:")
-            for regionName,regionDict in self.REGION_DICTS.items():
-                print(regionName)
+            print("here is a list of the sites available:")
+            for sitename, site_dict in self.REGION_DICTS.items():
+                print(sitename)
                 print(regionDict.keys())
             print("Enter the region (if multiple enter in comma dilimeted list) you would like to look at (or 'all' for every region)")
             regions = input("region(s): ")
