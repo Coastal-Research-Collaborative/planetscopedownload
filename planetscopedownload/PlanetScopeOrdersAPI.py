@@ -64,7 +64,8 @@ def create_site_dict_json_for_API(site_name:str, region:str, aoi:list, start_dat
     This function creates sites/<sitename>_site_dict.json for the given site
     """
 
-    if not os.path.exists('sites'): os.mkdir('sites')
+    sites_dir = os.path.join(data_dir, 'sites')
+    if not os.path.exists(sites_dir): os.mkdir(sites_dir)
 
     if aoi[0] != aoi[-1]: aoi.append(aoi[0].copy())  # PlanetScope API wants last coordinate to be copy of first coordinate
 
@@ -96,7 +97,7 @@ def create_site_dict_json_for_API(site_name:str, region:str, aoi:list, start_dat
     }
     
 
-    file_path = os.path.join('sites', f'{region}_site_dict.json')
+    file_path = os.path.join(sites_dir, f'{region}_site_dict.json')
 
     # load existing data if file exists; otherwise, start with an empty dictionary
     if os.path.exists(file_path):
@@ -109,7 +110,7 @@ def create_site_dict_json_for_API(site_name:str, region:str, aoi:list, start_dat
     existing_data.update(site_entry)
     
 
-    with open(os.path.join('sites', f'{region}_site_dict.json'), "w") as f: 
+    with open(os.path.join(sites_dir, f'{region}_site_dict.json'), "w") as f: 
         json.dump(existing_data, f, indent=4) # indent=4 makes the JSON pretty-printed
 
     return existing_data
