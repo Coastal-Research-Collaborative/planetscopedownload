@@ -301,13 +301,13 @@ class PlanetScopeAPIOrder(object):
 
 
 
-    def get_one_site_data_from_products(self, siteName, siteDict, region, products, max_retries=3):
+    def get_one_site_data_from_products(self, sitename, site_dict, products, max_retries=3):
         """
         This function is a helper function that takes in the products returned from self.build_clip_request_dict()
         """
         if not products or products['products'] == False:
             # do nothing
-            print('\nThere is no data for {} at this time and aoi'.format(siteName))
+            print('\nThere is no data for {} at this time and aoi'.format(sitename))
         else:
             if len(products['products']) > 1:
                 # because there were too many items to all query at once it was split into multiple products
@@ -321,9 +321,9 @@ class PlanetScopeAPIOrder(object):
                     retry_count = 0
                     while retry_count < max_retries:
                         try:
-                            self.poll_for_success(request_url, siteName)
-                            self.download_order(request_url, siteName, siteDict, region)
-                            print(f'download pau: {siteName}')
+                            self.poll_for_success(request_url, sitename)
+                            self.download_order(request_url, sitename, site_dict)
+                            print(f'download pau: {sitename}')
                             break  # Break out of the retry loop if successful
                         except Exception as e:
                             retry_count += 1
@@ -346,9 +346,9 @@ class PlanetScopeAPIOrder(object):
                 retry_count = 0
                 while retry_count < max_retries:
                     try:
-                        self.poll_for_success(request_url, siteName)
-                        self.download_order(request_url, siteName, siteDict, region)
-                        print(f'download pau: {siteName}')
+                        self.poll_for_success(request_url, sitename)
+                        self.download_order(request_url, sitename, site_dict)
+                        print(f'download pau: {sitename}')
                         break  # Break out of the retry loop if successful
                     except Exception as e:
                         retry_count += 1
