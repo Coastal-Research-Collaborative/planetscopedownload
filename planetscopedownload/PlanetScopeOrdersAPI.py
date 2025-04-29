@@ -133,7 +133,7 @@ class PlanetScopeAPIOrder(object):
     Each class instance represents one query to the PlanetScope orders API
     """
 
-    def __init__(self, dictionaries=None, rootDir=None, dataRootDir=None, oneSite=False, selectSites=False, threading=False, printAll=False, printPolling=False):
+    def __init__(self, dictionaries=None, rootDir=os.path.join('data'), dataRootDir=None, oneSite=False, selectSites=False, threading=False, printAll=False, printPolling=False):
         """
         Class constructor
 
@@ -157,7 +157,7 @@ class PlanetScopeAPIOrder(object):
             # if we are planning to run multiple sites at one time we need to load in all of the API dictionaries
             if dictionaries == None:
                 # load from json
-                single_site_dicts = glob(os.path.join('sites', '*_site_dict.json'))
+                single_site_dicts = glob(os.path.join(self.ROOT_DIR, 'sites', '*_site_dict.json'))
                 if len(single_site_dicts) >= 1:
                     # self.SITE_DICTS = []
                     self.REGION_DICTS  = {}
@@ -471,8 +471,8 @@ class PlanetScopeAPIOrder(object):
 
         # remove images that have previously been downloaded
         alreadyDownloaded = ''
-        if exists(os.path.join(self.DATA_ROOT_DIR, 'data', siteName)):
-            alreadyDownloaded = os.listdir(os.path.join(self.DATA_ROOT_DIR, 'data', siteName))
+        if exists(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', siteName)):
+            alreadyDownloaded = os.listdir(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', siteName))
             alreadyDownloaded = ''.join(alreadyDownloaded) # make it one string so we can just search if it exists
         idList = [] # reset idList because the old contents have already been removed
         # get already downloaded assets
@@ -665,9 +665,9 @@ class PlanetScopeAPIOrder(object):
         # innerDir = 'files'
         # siteDir = (siteName + "_images_" + siteDict['item_type'])
 
-        supportingFunctions.create_dir(os.path.join(self.DATA_ROOT_DIR, 'data', region, siteName))
+        create_dir(os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', region, siteName))
 
-        results_paths = [os.path.join(self.DATA_ROOT_DIR, 'data', region, siteName, n) for n in results_fileNames]
+        results_paths = [os.path.join(self.DATA_ROOT_DIR, 'data', 'sat_images', region, siteName, n) for n in results_fileNames]
 
         print(f'{len(results_urls)} items to download for {siteName}')
         
