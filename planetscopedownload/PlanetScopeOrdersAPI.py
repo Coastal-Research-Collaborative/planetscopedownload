@@ -202,14 +202,11 @@ class PlanetScopeAPIOrder(object):
 
         print(self.SITE_DICTS)
 
-
         if self.THREAD:
             self.get_all_data_concurrent()
         else:
-            for dict, site_dict in self.SITE_DICTS.items():
-                # the first variable is a throwaway variable because we dont need it but it is the sitename
-                for sitename, site_dict in site_dict.items():
-                    self.get_one_site_data(sitename, site_dict)
+            for sitename, site_dict in self.SITE_DICTS.items():
+                self.get_one_site_data(sitename, site_dict)
 
 
     def get_all_data_concurrent(self):
@@ -252,6 +249,9 @@ class PlanetScopeAPIOrder(object):
         # maxDays in the daterange we assume that it will be more than 250 items and we split it up
         maxDays = 200
         dtFormat = '%Y-%m-%dT%H:%M:%S.%fZ' # e.g. '2022-08-22T00:00:00.000Z'
+        print(site_dict)
+        print(site_dict['date_range_filter']['config']['gte'])
+        print(site_dict['date_range_filter']['config']['lte'])
         gte = dt.datetime.strptime(site_dict['date_range_filter']['config']['gte'], dtFormat)
         lte = dt.datetime.strptime(site_dict['date_range_filter']['config']['lte'], dtFormat)
         timeRangeLength = lte-gte
