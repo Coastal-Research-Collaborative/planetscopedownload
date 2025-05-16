@@ -312,10 +312,23 @@ class PlanetScopeAPIOrder(object):
                 # now we will run each product individually (currently not concurrently)
                 productsShell = products.copy()  # if we don't use copy then it will be a pointer to products and not a separate element
                 productsShell.pop('products')
+
                 for i in range(len(products['products'])):
                     productsShell['products'] = products['products'][i]
                     productsPartial = productsShell  # no need to copy here because we are overwriting the products element in productShell each iteration
-                    request_url = self.place_order(productsPartial)
+
+                    try:
+                        request_url = self.place_order(productsPartial)
+                        if request_url is None:
+                            print(f"Order failed or empty for site {sitename}, skipping...")
+                            continue
+                    except Exception as e:
+                        if "no access to assets" in str(e):
+                            print(f"Skipping inaccessible product: {productsShell['products'].get('item_ids')} - {productsShell['products'].get('item_type')}")
+                            continue # just try the next product and see if it works
+                        else:
+                            raise  # let unexpected errors propagate            
+
                     retry_count = 0
                     while retry_count < max_retries:
                         try:
@@ -335,7 +348,12 @@ class PlanetScopeAPIOrder(object):
 
             else:
                 print(products)
-                request_url = self.place_order(products)
+                try:
+                    request_url = self.place_order(products)
+                except Exception as e:
+                    if "no access to assets" in str(e):
+                        print(f"Skipping inaccessible product: {products.get('item_ids')} - {products.get('item_type')}")
+                        return str(e)
                 print(request_url)
                 if request_url is None: 
                     print('The products for this time were empty so skipping')
