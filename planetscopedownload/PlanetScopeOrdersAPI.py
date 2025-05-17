@@ -352,36 +352,7 @@ class PlanetScopeAPIOrder(object):
                     request_urls = [self.place_order(products)]
                 except Exception as e:
                     if "no access to assets" in str(e):
-                        product_list = products['products']
-                        print(product_list)
-                        print('-------------------------------------------------------------------------------')
-                        if not isinstance(product_list, list):
-                            product_list = [product_list]  # normalize to list
-                        base_shell = products.copy()
-                        base_shell.pop('products', None)
-                        request_urls = []
-                        for i, product in enumerate(product_list):
-                            print(f"\nPlacing order for product {i + 1}/{len(product_list)} for {sitename}")
-
-                            product_payload = base_shell.copy()
-                            product_payload['products'] = product
-
-                            try:
-                                request_url = self.place_order(product_payload)
-                                if request_url is None:
-                                    print(f"Order failed or returned None for product {i + 1}, skipping...")
-                                    continue
-                            except Exception as e:
-                                if "no access to assets" in str(e):
-                                    print(f"Skipping inaccessible product: {product.get('item_ids')} - {product.get('item_type')}")
-                                    continue
-                                else:
-                                    print(f"Unexpected error placing order for product {i + 1}: {e}")
-                                    traceback.print_exc()
-                                    continue
-                            request_urls.append(request_url)
-                        print(f"Skipping inaccessible product: {products.get('item_ids')} - {products.get('item_type')}")
-                        # return str(e)
+                        request_urls = self.breack_up_product(sitename, products)
 
                 for request_url in request_urls:
                     print(request_url)
@@ -406,7 +377,47 @@ class PlanetScopeAPIOrder(object):
                                 print(f"Maximum retries reached. Returning with the error.")
                                 return str(e)
 
-       
+    
+    def breack_up_product(self,  sitename, product):
+        """
+        Its possible that not all of the idems in the product are not accessable so this runs them individually to see which ones might still work
+        it is important to note this splits up one product into a seperate product for each item id 
+        """
+        request_urls = []
+        print(product)
+        print('&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&')
+
+        base_shell = product.copy()
+        base_shell.pop('products', None)
+        request_urls = []
+        item_ids = product['products'][0]['item_ids']
+        for i, item_id in enumerate(item_ids):
+            # this f
+            print(f"\nPlacing order for item {i + 1}/{len(item_ids)} for product of {sitename}")
+
+            product_payload = base_shell.copy()
+            print(product_payload)
+            print(type(product_payload))
+            product_payload['products'] = product
+
+            try:
+                request_url = self.place_order(product_payload)
+                if request_url is None:
+                    print(f"Order failed or returned None for product {i + 1}, skipping...")
+                    continue
+            except Exception as e:
+                if "no access to assets" in str(e):
+                    print(f"Skipping inaccessible product: {product.get('item_ids')} - {product.get('item_type')}")
+                    continue
+                else:
+                    print(f"Unexpected error placing order for product {i + 1}: {e}")
+                    traceback.print_exc()
+                    continue
+            request_urls.append(request_url)
+        print(f"Skipping inaccessible product: {products.get('item_ids')} - {products.get('item_type')}")
+
+        return request_urls
+
 
     def get_combined_filter(self, site_dict):
         """
