@@ -353,10 +353,13 @@ class PlanetScopeAPIOrder(object):
                 except Exception as e:
                     if "no access to assets" in str(e):
                         product_list = products['products']
+                        print(product_list)
+                        print('-------------------------------------------------------------------------------')
                         if not isinstance(product_list, list):
                             product_list = [product_list]  # normalize to list
                         base_shell = products.copy()
                         base_shell.pop('products', None)
+                        request_urls = []
                         for i, product in enumerate(product_list):
                             print(f"\nPlacing order for product {i + 1}/{len(product_list)} for {sitename}")
 
@@ -376,11 +379,12 @@ class PlanetScopeAPIOrder(object):
                                     print(f"Unexpected error placing order for product {i + 1}: {e}")
                                     traceback.print_exc()
                                     continue
-
+                            request_urls.append(request_url)
                         print(f"Skipping inaccessible product: {products.get('item_ids')} - {products.get('item_type')}")
                         # return str(e)
-                print(request_url)
+
                 for request_url in request_urls:
+                    print(request_url)
                     if request_url is None: 
                         print('The products for this time were empty so skipping')
                         print('if item_ids is not empty this is mostlikely and issue with the API key being used sites/PlanetScope_API_key.txt')
