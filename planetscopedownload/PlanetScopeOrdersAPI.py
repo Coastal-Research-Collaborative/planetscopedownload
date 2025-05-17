@@ -349,32 +349,58 @@ class PlanetScopeAPIOrder(object):
             else:
                 print(products)
                 try:
-                    request_url = self.place_order(products)
+                    request_urls = [self.place_order(products)]
                 except Exception as e:
                     if "no access to assets" in str(e):
+                        product_list = products['products']
+                        if not isinstance(product_list, list):
+                            product_list = [product_list]  # normalize to list
+                        base_shell = products.copy()
+                        base_shell.pop('products', None)
+                        for i, product in enumerate(product_list):
+                            print(f"\nPlacing order for product {i + 1}/{len(product_list)} for {sitename}")
+
+                            product_payload = base_shell.copy()
+                            product_payload['products'] = product
+
+                            try:
+                                request_url = self.place_order(product_payload)
+                                if request_url is None:
+                                    print(f"Order failed or returned None for product {i + 1}, skipping...")
+                                    continue
+                            except Exception as e:
+                                if "no access to assets" in str(e):
+                                    print(f"Skipping inaccessible product: {product.get('item_ids')} - {product.get('item_type')}")
+                                    continue
+                                else:
+                                    print(f"Unexpected error placing order for product {i + 1}: {e}")
+                                    traceback.print_exc()
+                                    continue
+
                         print(f"Skipping inaccessible product: {products.get('item_ids')} - {products.get('item_type')}")
-                        return str(e)
+                        # return str(e)
                 print(request_url)
-                if request_url is None: 
-                    print('The products for this time were empty so skipping')
-                    print('if item_ids is not empty this is mostlikely and issue with the API key being used sites/PlanetScope_API_key.txt')
-                    return None # this is just to skip the download portion
-                retry_count = 0
-                while retry_count < max_retries:
-                    try:
-                        self.poll_for_success(request_url, sitename)
-                        self.download_order(request_url, sitename, site_dict)
-                        print(f'download pau: {sitename}')
-                        break  # Break out of the retry loop if successful
-                    except Exception as e:
-                        retry_count += 1
-                        print(f"Error occurred: {str(e)}")
-                        print(f"Retrying {retry_count}/{max_retries} in 30 seconds...")
-                        time.sleep(30)
-                        traceback.print_exc()  # This will print the traceback to help debug the issue
-                        if retry_count == max_retries:
-                            print(f"Maximum retries reached. Returning with the error.")
-                            return str(e)
+                for request_url in request_urls:
+                    if request_url is None: 
+                        print('The products for this time were empty so skipping')
+                        print('if item_ids is not empty this is mostlikely and issue with the API key being used sites/PlanetScope_API_key.txt')
+                        continue # this is just to skip the download portion
+                    retry_count = 0
+                    while retry_count < max_retries:
+                        try:
+                            self.poll_for_success(request_url, sitename)
+                            self.download_order(request_url, sitename, site_dict)
+                            print(f'download pau: {sitename}')
+                            break  # Break out of the retry loop if successful
+                        except Exception as e:
+                            retry_count += 1
+                            print(f"Error occurred: {str(e)}")
+                            print(f"Retrying {retry_count}/{max_retries} in 30 seconds...")
+                            time.sleep(30)
+                            traceback.print_exc()  # This will print the traceback to help debug the issue
+                            if retry_count == max_retries:
+                                print(f"Maximum retries reached. Returning with the error.")
+                                return str(e)
 
        
 
