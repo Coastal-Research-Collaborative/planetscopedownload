@@ -392,6 +392,7 @@ class PlanetScopeAPIOrder(object):
         request_urls = []
         item_ids = product['products'][0]['item_ids']
         for i, item_id in enumerate(item_ids):
+            print(f'{item_id=}')
             # this f
             print(f"\nPlacing order for item {i + 1}/{len(item_ids)} for product of {sitename}")
 
@@ -406,15 +407,18 @@ class PlanetScopeAPIOrder(object):
                     print(f"Order failed or returned None for product {i + 1}, skipping...")
                     continue
             except Exception as e:
-                if "no access to assets" in str(e):
-                    print(f"Skipping inaccessible product: {product.get('item_ids')} - {product.get('item_type')}")
-                    continue
-                else:
-                    print(f"Unexpected error placing order for product {i + 1}: {e}")
-                    traceback.print_exc()
-                    continue
+                print(f'failed {e}')
+                traceback.print_exc()
+                continue
+                # if "no access to assets" in str(e):
+                #     print(f"Skipping inaccessible product: {product.get('item_ids')} - {product.get('item_type')}")
+                #     continue
+                # else:
+                #     print(f"Unexpected error placing order for product {i + 1}: {e}")
+                #     traceback.print_exc()
+                #     continue
             request_urls.append(request_url)
-        print(f"Skipping inaccessible product: {products.get('item_ids')} - {products.get('item_type')}")
+        # print(f"Skipping inaccessible product: {products.get('item_ids')} - {products.get('item_type')}")
 
         return request_urls
 
