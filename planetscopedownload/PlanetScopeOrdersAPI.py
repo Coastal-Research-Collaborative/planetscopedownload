@@ -352,7 +352,7 @@ class PlanetScopeAPIOrder(object):
                     request_urls = [self.place_order(products)]
                 except Exception as e:
                     if "no access to assets" in str(e):
-                        request_urls = self.breack_up_product(sitename, products)
+                        request_urls = self.break_up_product(sitename, products)
 
                 for request_url in request_urls:
                     print(request_url)
@@ -378,7 +378,7 @@ class PlanetScopeAPIOrder(object):
                                 return str(e)
 
     
-    def breack_up_product(self,  sitename, product):
+    def break_up_product(self,  sitename, product):
         """
         Its possible that not all of the idems in the product are not accessable so this runs them individually to see which ones might still work
         it is important to note this splits up one product into a seperate product for each item id 
