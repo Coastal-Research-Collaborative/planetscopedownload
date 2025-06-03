@@ -8,6 +8,8 @@ import os
 import json
 import geojson
 import requests
+import pathlib
+import time
 
 def load_api_key(api_text_fn):
     with open(api_text_fn, "r") as file:
@@ -144,6 +146,37 @@ def place_order(request, auth, orders_url='https://api.planet.com/compute/ops/or
         except Exception:
             print("Raw response:", response.text)
         return None
+    
+
+def poll_for_success(order_url, auth, num_loops=30):
+    count = 0
+    while(count < num_loops):
+        count += 1
+        r = requests.get(order_url, auth=auth)
+        response = r.json()
+        state = response['state']
+        print(state)
+        end_states = ['success', 'failed', 'partial']
+        if state in end_states:
+            print(state)
+            break
+        time.sleep(10)
+
+def download_results(results, sitename:str, data_dir:str, overwrite=False):
+    results_urls = [r['location'] for r in results]
+    results_names = [r['name'] for r in results]
+    print('{} items to download'.format(len(results_urls)))
+    
+    for url, name in zip(results_urls, results_names):
+        path = pathlib.Path(os.path.join(data_dir, 'sat_images', sitename, 'PS', name)) # PS for planetscope
+        
+        if overwrite or not path.exists():
+            print('downloading {} to {}'.format(name, path))
+            r = requests.get(url, allow_redirects=True)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            open(path, 'wb').write(r.content)
+        else:
+            print('{} already exists, skipping {}'.format(path, name))
 
 
 def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:str=None, data_dir:str='data', polygon=None):
@@ -178,8 +211,9 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
             with open(polygon_path, 'r') as file: geojson_data = geojson.load(file)
             coords = geojson_data["features"][0]["geometry"]['coordinates'][0]
             polygon = [[coord[0], coord[1]] for coord in coords]  # Keep only lat, lon
-
-    print(polygon)
+    if polygon[0] != polygon[-1]:
+        polygon.append(polygon[0]) # NOTE the polygons need to be closed meaning the first and last point are the saem
+    print(f'{polygon=}')
 
     geometry = {
         "type": "GeometryFilter",
@@ -220,23 +254,61 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
 
     #### GET ITEM IDs ####
     image_ids = get_item_ids(and_filter=and_filter, auth_or_api_key=auth)
-    print(image_ids)
+    print(f'{len(image_ids)} applicable images')
 
-    #### CREATE PRODUCT ####
-    # # NOTE This is where we ask to clip the imagery 
-    # products = [
-    #     {
-    #         'item_ids': image_ids,
-    #         'item_type': "PSScene",
-    #         "product_bundle":"analytic_udm2"
-    #     }
-    # ]
+    #### CREATE PRODUCTS ####
+    # NOTE This is where we ask to clip the imagery 
+    products = [
+        {
+            'item_ids': image_ids,
+            'item_type': "PSScene",
+            "product_bundle":"analytic_udm2"
+        }
+    ]
 
-    # request = {
+    # request = { # NOTE doesnt clip to AOI
     #     "name": sitename,
     #     "products":products,
     #     "delivery": {"single_archive": True, "archive_type": 'zip'}
     # }
 
-    # #### PLACE ORDER ####
-    # order_url = place_order(request, auth=auth)
+    #### BUILD CLIP REQUEST ####
+    clip_aoi = {
+        "type" : "Polygon",
+        "coordinates" : polygon
+    }
+
+    clip = {
+        "clip" : {
+            "aoi" : clip_aoi
+        }
+    }
+
+    # may need to add more specificity here (different TOAR for different sites/satalitess)
+    toar = {
+        "toar": {
+            "scale_factor": 10000
+        }
+    }
+
+    request_clip = {
+        "name": sitename,
+        "products": products,
+        "tools": [clip, toar]
+    }
+
+    #### PLACE ORDER ####
+    order_url = place_order(request_clip, auth=auth)
+
+    #### POLLING FOR SUCCESS ####
+    poll_for_success(order_url, auth)
+
+    #### DOWNLOAD IMAGERY ####
+    r = requests.get(order_url, auth=auth)
+    response = r.json()
+    results = response['_links']['results']
+    # output_files = [r['name'] for r in results]
+
+    download_results(results, sitename=sitename, data_dir=data_dir, overwrite=False)
+
+
