@@ -275,7 +275,7 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
     #### BUILD CLIP REQUEST ####
     clip_aoi = {
         "type" : "Polygon",
-        "coordinates" : polygon
+        "coordinates" : [ polygon ] 
     }
 
     clip = {
