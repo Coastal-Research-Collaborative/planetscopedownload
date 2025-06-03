@@ -14,6 +14,16 @@ import pathlib
 import time
 import zipfile
 
+def write_api_key_file(api_key:str, overwrite:bool=False, data_dir:str=os.path.join(os.getcwd(), 'data')):
+    sites_dir = os.path.join(data_dir, 'planetscope')
+    if not os.path.exists(sites_dir): os.mkdir(sites_dir)
+    
+    file_path = os.path.join(sites_dir, 'PlanetScope_API_key.txt')
+    if overwrite or not os.path.exists(file_path):
+        # if we want to overwrite or if it doesnt exsist we will need to make it
+        with open(file_path, "w") as file:
+            file.write(api_key)
+
 def load_api_key(api_text_fn):
     with open(api_text_fn, "r") as file:
         PLANET_API_KEY = file.read()  # Read entire file content
