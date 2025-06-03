@@ -5,11 +5,14 @@ Notice we use the Planet Data API to get the item ids of the images that we want
 Author: Joel Nicolow, Coastal Research Collaborative, School of Ocean and Earth Science and Technology, University of Hawaii at Manoa
 """
 import os
+from glob import glob
+import shutil
 import json
 import geojson
 import requests
 import pathlib
 import time
+import zipfile
 
 def load_api_key(api_text_fn):
     with open(api_text_fn, "r") as file:
@@ -163,12 +166,22 @@ def poll_for_success(order_url, auth, num_loops=30):
         time.sleep(10)
 
 def download_results(results, sitename:str, data_dir:str, overwrite=False):
+    dest_dir = os.path.join(data_dir, 'sat_images', sitename, 'PS')
+
     results_urls = [r['location'] for r in results]
     results_names = [r['name'] for r in results]
     print('{} items to download'.format(len(results_urls)))
     
+    timestamp = None
     for url, name in zip(results_urls, results_names):
-        path = pathlib.Path(os.path.join(data_dir, 'sat_images', sitename, 'PS', name)) # PS for planetscope
+        short_fn = os.path.basename(name)
+        # if '.tif' in short_fn:
+        #     splits = short_fn.split('_')
+        #     timestamp = f'{splits[0]}_{splits[1]}'
+        # elif 'manifest' in short_fn:
+        #     short_fn = f'{timestamp}_manifest.json' # NOTE each download will have one manifest so can prolly just delete it
+
+        path = pathlib.Path(os.path.join(dest_dir, short_fn)) # PS for planetscope we dont care about the folders just the files
         
         if overwrite or not path.exists():
             print('downloading {} to {}'.format(name, path))
@@ -177,6 +190,10 @@ def download_results(results, sitename:str, data_dir:str, overwrite=False):
             open(path, 'wb').write(r.content)
         else:
             print('{} already exists, skipping {}'.format(path, name))
+
+
+
+
 
 
 def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:str=None, data_dir:str='data', polygon=None):
@@ -254,7 +271,7 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
 
     #### GET ITEM IDs ####
     image_ids = get_item_ids(and_filter=and_filter, auth_or_api_key=auth)
-    print(f'{len(image_ids)} applicable images')
+    # print(f'{len(image_ids)} applicable images')
 
     #### CREATE PRODUCTS ####
     # NOTE This is where we ask to clip the imagery 
@@ -306,6 +323,7 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
     #### DOWNLOAD IMAGERY ####
     r = requests.get(order_url, auth=auth)
     response = r.json()
+    # pretty_print(response)
     results = response['_links']['results']
     # output_files = [r['name'] for r in results]
 
