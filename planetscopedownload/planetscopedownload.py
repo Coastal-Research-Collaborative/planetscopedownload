@@ -180,7 +180,7 @@ def download_results(results, sitename:str, data_dir:str, overwrite=False):
         #     timestamp = f'{splits[0]}_{splits[1]}'
         # elif 'manifest' in short_fn:
         #     short_fn = f'{timestamp}_manifest.json' # NOTE each download will have one manifest so can prolly just delete it
-
+        if 'manifest' in short_fn: continue # no need download manifest
         path = pathlib.Path(os.path.join(dest_dir, short_fn)) # PS for planetscope we dont care about the folders just the files
         
         if overwrite or not path.exists():
