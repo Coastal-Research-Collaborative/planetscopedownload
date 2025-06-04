@@ -278,6 +278,9 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
 
     #### GET ITEM IDs ####
     image_ids = get_item_ids(and_filter=and_filter, auth_or_api_key=auth)
+    if len(image_ids) <= 0:
+        print('No images avaible for this timeframe and AOI')
+        return False
     # print(f'{len(image_ids)} applicable images')
 
     #### CREATE PRODUCTS ####
