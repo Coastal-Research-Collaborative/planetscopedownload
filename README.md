@@ -1,5 +1,5 @@
 [![Last Commit](https://img.shields.io/github/last-commit/Coastal-Research-Collaborative/planetscopedownload)](
-https://github.com/Coastal-Research-Collaborative/geedownload/commits/)
+https://github.com/Coastal-Research-Collaborative/planetscopedownload/commits/)
 ![GitHub issues](https://img.shields.io/github/issues/Coastal-Research-Collaborative/planetscopedownload)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/Coastal-Research-Collaborative/planetscopedownload)
