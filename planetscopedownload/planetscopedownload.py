@@ -347,4 +347,6 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
 
     download_results(results, sitename=sitename, data_dir=data_dir, overwrite=False)
 
+    return True
+
 
