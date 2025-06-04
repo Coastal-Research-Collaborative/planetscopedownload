@@ -52,7 +52,7 @@ planetscopedownload.retrieve_imagery(
     sitename='hawaiiwaikiki', 
     start_date=start_date, 
     end_date=end_date, # inclusive
-    planet_api_key='Your Planet API Key (instruction in {example_notebook.ipynb}),
+    planet_api_key='Your Planet API Key (instruction in {example_notebook.ipynb})',
     data_dir=data_dir,
     polygon=coords
 )
