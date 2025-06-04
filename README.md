@@ -5,7 +5,7 @@ https://github.com/Coastal-Research-Collaborative/planetscopedownload/commits/)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/y/Coastal-Research-Collaborative/planetscopedownload)
 # 🌍 planetscopedownload  
 
-**`geedownload`** is a Python package designed to facilitate the downloading of **Landsat** and **Sentinel** imagery from **Google Earth Engine (GEE)**.
+**`planetscopedownload`** is a Python package designed to facilitate the downloading of **PlanetScope** imagery from [**Planet Lab's**](https://www.planet.com/) data and orders APIs.
 
 ## 📥 Installation  
 
