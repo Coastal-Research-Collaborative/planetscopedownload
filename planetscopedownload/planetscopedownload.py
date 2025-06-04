@@ -272,7 +272,7 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
         if not os.path.exists(api_path):
              raise BaseException(f'Planetscope api not passed as argument and could not find at {api_path}')
         
-        planet_api_key = planetscopedownload.load_api_key(api_path)
+        planet_api_key = load_api_key(api_path)
 
     auth = planet_auth(planet_api_key)
 
