@@ -12,19 +12,22 @@ https://github.com/Coastal-Research-Collaborative/planetscopedownload/commits/)
 To install the package directly from GitHub, run:  
 
 ```bash
-pip install git+https://github.com/Coastal-Research-Collaborative/geedownload.git
+pip install git+https://github.com/Coastal-Research-Collaborative/planetscopedownload.git
 ```
 To upgrade this package, run:
 ```bash
-pip install --no-cache-dir --force-reinstall git+https://github.com/Coastal-Research-Collaborative/geedownload.git
+pip install --no-cache-dir --force-reinstall git+https://github.com/Coastal-Research-Collaborative/planetscopedownload.git
 ```
+or, uninstall then reinstall
+```bash
+pip uninstall planetscopedownload
+pip install git+https://github.com/Coastal-Research-Collaborative/planetscopedownload.git
 
 ## 🚀 Usage
 
 #### 1️⃣ Import the package
 ```python
-import os
-import geedownload
+import planetscopedownload
 ```
 #### 2️⃣ Define a Site, Coordinates, and Timeframe
 ```python
@@ -45,10 +48,11 @@ end_date = '2024-08-30'
 ```python
 data_dir = 'path where imagery will be downloaded'  # Specify where to save images
 
-geedownload.retrieve_imagery(
-    sitename=sitename, 
-    start_date=start_date,
-    end_date=end_date,
+planetscopedownload.retrieve_imagery(
+    sitename='hawaiiwaikiki', 
+    start_date=start_date, 
+    end_date=end_date, # inclusive
+    planet_api_key='Your Planet API Key (instruction in {example_notebook.ipynb}),
     data_dir=data_dir,
     polygon=coords
 )
