@@ -237,7 +237,7 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
             polygon = [[coord[0], coord[1]] for coord in coords]  # Keep only lat, lon
     if polygon[0] != polygon[-1]:
         polygon.append(polygon[0]) # NOTE the polygons need to be closed meaning the first and last point are the saem
-    print(f'{polygon=}')
+    # print(f'{polygon=}')
 
     geometry = {
         "type": "GeometryFilter",
