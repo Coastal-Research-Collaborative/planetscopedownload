@@ -14,6 +14,10 @@ import pathlib
 import time
 import zipfile
 
+def pretty_print(data):
+    """Pretty printing of jsons"""
+    print(json.dumps(data, indent = 2))
+
 def write_api_key_file(api_key:str, overwrite:bool=False, data_dir:str=os.path.join(os.getcwd(), 'data')):
     sites_dir = os.path.join(data_dir, 'planetscope')
     if not os.path.exists(sites_dir): os.mkdir(sites_dir)
@@ -28,10 +32,6 @@ def load_api_key(api_text_fn):
     with open(api_text_fn, "r") as file:
         PLANET_API_KEY = file.read()  # Read entire file content
     return PLANET_API_KEY
-
-def pretty_print(data):
-    """Pretty printing of jsons"""
-    print(json.dumps(data, indent = 2))
 
 
 def create_polygon_geojson(sitename:str, coords:list, data_dir:str='data'):
@@ -161,7 +161,7 @@ def place_order(request, auth, orders_url='https://api.planet.com/compute/ops/or
         return None
     
 
-def poll_for_success(order_url, auth, num_loops=30):
+def poll_for_success(order_url, auth, num_loops=200):
     count = 0
     while(count < num_loops):
         count += 1
@@ -203,10 +203,7 @@ def download_results(results, sitename:str, data_dir:str, overwrite=False):
 
 
 
-
-
-
-def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:str=None, data_dir:str='data', polygon=None):
+def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:str=None, data_dir:str='data', polygon=None, max_poll_itterations:int=200):
     """
 
     :param sitename: str the name of the side (folders will be created based on this)
@@ -333,7 +330,15 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
     #### DOWNLOAD IMAGERY ####
     r = requests.get(order_url, auth=auth)
     response = r.json()
-    # pretty_print(response)
+
+    if not 'results' in response['_links']:
+        print('First poll for success completed with status still as running...polling again')
+        poll_for_success(order_url, auth)
+        r = requests.get(order_url, auth=auth)
+        response = r.json() 
+    if not 'results' in response['_links']:
+        raise BaseException('Order is not prepared yet try increasing poll itterations usign retrieve_imagery()\'s max_poll_itterations') 
+
     results = response['_links']['results']
     # output_files = [r['name'] for r in results]
 
