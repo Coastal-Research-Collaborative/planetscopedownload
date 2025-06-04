@@ -22,7 +22,7 @@ or, uninstall then reinstall
 ```bash
 pip uninstall planetscopedownload
 pip install git+https://github.com/Coastal-Research-Collaborative/planetscopedownload.git
-
+```
 ## 🚀 Usage
 
 #### 1️⃣ Import the package
