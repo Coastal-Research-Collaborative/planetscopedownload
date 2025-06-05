@@ -60,3 +60,5 @@ planetscopedownload.retrieve_imagery(
 )
 ```
 
+
+There is a similar Python package for Google Earth Engine Landsat and Sentinel image download [**here**](https://github.com/Coastal-Research-Collaborative/geedownload)
