@@ -18,6 +18,7 @@ def pretty_print(data):
     """Pretty printing of jsons"""
     print(json.dumps(data, indent = 2))
 
+
 def write_api_key_file(api_key:str, overwrite:bool=False, data_dir:str=os.path.join(os.getcwd(), 'data')):
     sites_dir = os.path.join(data_dir, 'planetscope')
     if not os.path.exists(sites_dir): os.mkdir(sites_dir)
@@ -27,6 +28,7 @@ def write_api_key_file(api_key:str, overwrite:bool=False, data_dir:str=os.path.j
         # if we want to overwrite or if it doesnt exsist we will need to make it
         with open(file_path, "w") as file:
             file.write(api_key)
+
 
 def load_api_key(api_text_fn):
     with open(api_text_fn, "r") as file:
@@ -328,7 +330,7 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
     order_url = place_order(request_clip, auth=auth)
 
     #### POLLING FOR SUCCESS ####
-    poll_for_success(order_url, auth)
+    poll_for_success(order_url, auth, num_loops=max_poll_itterations)
 
     #### DOWNLOAD IMAGERY ####
     r = requests.get(order_url, auth=auth)
