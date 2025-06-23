@@ -205,6 +205,96 @@ def download_results(results, sitename:str, data_dir:str, overwrite=False):
 
 
 
+
+def retrieve_imagery_from_ids(sitename:str, image_ids:list[str], data_dir:str='data', auth=None, planet_api_key:str=None, polygon:list[list[float]]=None, max_poll_itterations:int=200):
+    """
+    Given item ids this will download the items (a pulygon can be given which will results in the downloaded images being cropped to that AOI)
+
+    :param sitename: str this is the name of the site which is just used for creating download folders
+    :image_ids: list[str] a list of the item ids what are to be downloaded (e.g. 20181226_002217_1020)
+    :data_dir: parent dir where the imagery will be downloaded
+    :auth: the planetscope authentification (to get auth run planet_auth(planet_api_key))
+    """
+
+    # check if auth exsists
+    if auth is None:
+        if planet_api_key is None:
+            raise RuntimeError('For planetscopedownload.retrieve_imagery_from_ids() either auth or the planet_api_key must be given')
+        auth = planet_auth(planet_api_key)
+
+
+    #### CREATE PRODUCTS ####
+    # NOTE This is where we ask to clip the imagery 
+    products = [
+        {
+            'item_ids': image_ids,
+            'item_type': "PSScene",
+            "product_bundle":"analytic_udm2"
+        }
+    ]
+
+    # request = { # NOTE doesnt clip to AOI
+    #     "name": sitename,
+    #     "products":products,
+    #     "delivery": {"single_archive": True, "archive_type": 'zip'}
+    # }
+
+    #### BUILD CLIP REQUEST ####
+    tools = []
+    if not polygon is None:
+        # if no polygon is gicen then the item will not be cliped
+        clip_aoi = {
+            "type" : "Polygon",
+            "coordinates" : [ polygon ] 
+        }
+
+        clip = {
+            "clip" : {
+                "aoi" : clip_aoi
+            }
+        }
+        tools.append(clip)
+
+    # may need to add more specificity here (different TOAR for different sites/satalitess)
+    toar = {
+        "toar": {
+            "scale_factor": 10000
+        }
+    }
+
+    tools.append(toar)
+    request_clip = {
+        "name": sitename,
+        "products": products,
+        "tools": tools # this is clip and toar (just toar if polygon is not gicen)
+    }
+
+    #### PLACE ORDER ####
+    order_url = place_order(request_clip, auth=auth)
+
+    #### POLLING FOR SUCCESS ####
+    poll_for_success(order_url, auth, num_loops=max_poll_itterations)
+
+    #### DOWNLOAD IMAGERY ####
+    r = requests.get(order_url, auth=auth)
+    response = r.json()
+
+    if not 'results' in response['_links']:
+        print('First poll for success completed with status still as running...polling again')
+        poll_for_success(order_url, auth)
+        r = requests.get(order_url, auth=auth)
+        response = r.json() 
+    if not 'results' in response['_links']:
+        raise BaseException('Order is not prepared yet try increasing poll itterations usign retrieve_imagery()\'s max_poll_itterations') 
+
+    results = response['_links']['results']
+    # output_files = [r['name'] for r in results]
+
+    download_results(results, sitename=sitename, data_dir=data_dir, overwrite=False)
+
+    return True
+
+
 def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:str=None, data_dir:str='data', polygon=None, max_poll_itterations:int=200):
     """
 
@@ -224,6 +314,7 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
     }
 
     if polygon is None:
+        
         # then the polygon must be loaded from a geojson
         if not os.path.join(data_dir, 'siteinfo', sitename, f"{sitename}_polygon.geojson"):
             raise BaseException(f'No polygon given and no polygon geojson availble to retrieve_imagery() for {sitename}')
@@ -285,70 +376,15 @@ def retrieve_imagery(sitename:str, start_date:str, end_date:str, planet_api_key:
         return False
     # print(f'{len(image_ids)} applicable images')
 
-    #### CREATE PRODUCTS ####
-    # NOTE This is where we ask to clip the imagery 
-    products = [
-        {
-            'item_ids': image_ids,
-            'item_type': "PSScene",
-            "product_bundle":"analytic_udm2"
-        }
-    ]
+    return retrieve_imagery_from_ids(
+        sitename=sitename, 
+        image_ids=image_ids,  
+        data_dir=data_dir, 
+        auth=auth, 
+        planet_api_key=None, # auth is given so no need planet_api_key
+        polygon=polygon, 
+        max_poll_itterations=max_poll_itterations)
 
-    # request = { # NOTE doesnt clip to AOI
-    #     "name": sitename,
-    #     "products":products,
-    #     "delivery": {"single_archive": True, "archive_type": 'zip'}
-    # }
 
-    #### BUILD CLIP REQUEST ####
-    clip_aoi = {
-        "type" : "Polygon",
-        "coordinates" : [ polygon ] 
-    }
-
-    clip = {
-        "clip" : {
-            "aoi" : clip_aoi
-        }
-    }
-
-    # may need to add more specificity here (different TOAR for different sites/satalitess)
-    toar = {
-        "toar": {
-            "scale_factor": 10000
-        }
-    }
-
-    request_clip = {
-        "name": sitename,
-        "products": products,
-        "tools": [clip, toar]
-    }
-
-    #### PLACE ORDER ####
-    order_url = place_order(request_clip, auth=auth)
-
-    #### POLLING FOR SUCCESS ####
-    poll_for_success(order_url, auth, num_loops=max_poll_itterations)
-
-    #### DOWNLOAD IMAGERY ####
-    r = requests.get(order_url, auth=auth)
-    response = r.json()
-
-    if not 'results' in response['_links']:
-        print('First poll for success completed with status still as running...polling again')
-        poll_for_success(order_url, auth)
-        r = requests.get(order_url, auth=auth)
-        response = r.json() 
-    if not 'results' in response['_links']:
-        raise BaseException('Order is not prepared yet try increasing poll itterations usign retrieve_imagery()\'s max_poll_itterations') 
-
-    results = response['_links']['results']
-    # output_files = [r['name'] for r in results]
-
-    download_results(results, sitename=sitename, data_dir=data_dir, overwrite=False)
-
-    return True
 
 
