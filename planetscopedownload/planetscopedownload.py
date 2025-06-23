@@ -210,10 +210,17 @@ def retrieve_imagery_from_ids(sitename:str, image_ids:list[str], data_dir:str='d
     """
     Given item ids this will download the items (a pulygon can be given which will results in the downloaded images being cropped to that AOI)
 
+    NOTE you only need one of auth/planet_api_key
+
     :param sitename: str this is the name of the site which is just used for creating download folders
-    :image_ids: list[str] a list of the item ids what are to be downloaded (e.g. 20181226_002217_1020)
-    :data_dir: parent dir where the imagery will be downloaded
-    :auth: the planetscope authentification (to get auth run planet_auth(planet_api_key))
+    :param image_ids: list[str] a list of the item ids what are to be downloaded (e.g. 20181226_002217_1020)
+    :param data_dir: parent dir where the imagery will be downloaded
+    :param auth: the planetscope authentification NOTE you can give planet_api_key instead and leave this None if you havent already run the auth (to get auth run planet_auth(planet_api_key))
+    :param planet_api_key: str planetscope api key if auth is None this should be passed so the authentification can be created...otherwise no Need
+    :param polygon: nested list of two point lat/long coordinates for where to crop the image (NOTE if none then images are not cropped to AOI)
+    :param max_pool_itterations: int the max number of loops poll_for_success can take
+
+    :return: boolean True if download worked succesfully
     """
 
     # check if auth exsists
